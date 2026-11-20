@@ -639,13 +639,66 @@ def _assert_coregistered(image: Volume, label_vol: Volume, label_key: str) -> No
         )
 
 
+def _assert_coregistered_uncertainty(image: Volume, unc_vol: Volume, unc_key: str) -> None:
+    if not np.issubdtype(unc_vol.dtype, np.floating):
+        raise ValueError(
+            f"Uncertainty volume '{unc_key}' in VolumeSet must have a floating-point dtype, got {unc_vol.dtype}."
+        )
+    if any(ax.kind not in ("space", "channel") for ax in unc_vol.axes):
+        raise SpaceMismatchError(
+            f"Uncertainty volume '{unc_key}' axes {unc_vol.axis_names} may only contain 'space' and optional 'channel' axes."
+        )
+    spatial_img = [
+        (s, ax) for s, ax in zip(image.shape, image.axes, strict=True) if ax.kind == "space"
+    ]
+    spatial_unc = [
+        (s, ax) for s, ax in zip(unc_vol.shape, unc_vol.axes, strict=True) if ax.kind == "space"
+    ]
+    if len(spatial_unc) != len(spatial_img):
+        raise SpaceMismatchError(
+            f"Uncertainty volume '{unc_key}' spatial axes {tuple(ax.name for _, ax in spatial_unc)} "
+            f"must match spatial axes of image {tuple(ax.name for _, ax in spatial_img)}."
+        )
+    for (s_img, ax_img), (s_unc, ax_unc) in zip(spatial_img, spatial_unc, strict=True):
+        if s_img != s_unc or ax_img.name != ax_unc.name or ax_img.unit != ax_unc.unit:
+            raise SpaceMismatchError(
+                f"Uncertainty volume '{unc_key}' grid (shape={unc_vol.shape}, axes={unc_vol.axes}) "
+                f"does not match image spatial grid (shape={image.shape}, axes={image.axes})."
+            )
+        if not (
+            math.isclose(ax_img.scale, ax_unc.scale, rel_tol=1e-9, abs_tol=1e-12)
+            and math.isclose(ax_img.offset, ax_unc.offset, rel_tol=1e-9, abs_tol=1e-12)
+        ):
+            raise SpaceMismatchError(
+                f"Uncertainty volume '{unc_key}' axis '{ax_unc.name}' (scale={ax_unc.scale}, offset={ax_unc.offset}) "
+                f"diverges from image axis (scale={ax_img.scale}, offset={ax_img.offset})."
+            )
+    if image.space is not None and unc_vol.space is not None and image.space != unc_vol.space:
+        raise SpaceMismatchError(
+            f"Uncertainty volume '{unc_key}' space={unc_vol.space!r} does not match image space={image.space!r}."
+        )
+
+
+def _slice_coregistered_aux(aux_vol: Volume, spatial_slices: tuple[slice, ...]) -> Volume:
+    cursor = 0
+    full_slices: list[slice] = []
+    for ax in aux_vol.axes:
+        if ax.kind == "space":
+            full_slices.append(spatial_slices[cursor])
+            cursor += 1
+        else:
+            full_slices.append(slice(None))
+    return aux_vol[tuple(full_slices)]
+
+
 class VolumeSet:
-    """Co-registered container pairing a primary image ``Volume`` with named integer label ``Volume``s."""
+    """Co-registered container pairing a primary image ``Volume`` with named label and uncertainty ``Volume``s."""
 
     def __init__(
         self,
         image: Volume,
         labels: Mapping[str, Volume] | None = None,
+        uncertainties: Mapping[str, Volume] | None = None,
     ) -> None:
         lbls: dict[str, Volume] = {}
         if labels is not None:
@@ -657,8 +710,21 @@ class VolumeSet:
                     )
                 _assert_coregistered(image, lv, clean_key)
                 lbls[clean_key] = lv
+
+        uncs: dict[str, Volume] = {}
+        if uncertainties is not None:
+            for key, uv in uncertainties.items():
+                clean_key = key.strip()
+                if not clean_key or "/" in clean_key or "\\" in clean_key:
+                    raise ValueError(
+                        f"Uncertainty key must be a plain identifier without slashes, got {key!r}."
+                    )
+                _assert_coregistered_uncertainty(image, uv, clean_key)
+                uncs[clean_key] = uv
+
         self._image = image
         self._labels = lbls
+        self._uncertainties = uncs
 
     @property
     def image(self) -> Volume:
@@ -668,6 +734,10 @@ class VolumeSet:
     def labels(self) -> dict[str, Volume]:
         return dict(self._labels)
 
+    @property
+    def uncertainties(self) -> dict[str, Volume]:
+        return dict(self._uncertainties)
+
     def __getitem__(self, key: slice | tuple[slice | Any, ...]) -> VolumeSet:
         slices = _normalize_slice_tuple(key, self._image.ndim)
         sliced_img = self._image[slices]
@@ -675,9 +745,21 @@ class VolumeSet:
             slc for slc, ax in zip(slices, self._image.axes, strict=True) if ax.kind == "space"
         )
         sliced_labels = {k: lv[spatial_slices] for k, lv in self._labels.items()}
-        return VolumeSet(sliced_img, labels=sliced_labels)
+        sliced_uncertainties = {
+            k: _slice_coregistered_aux(uv, spatial_slices) for k, uv in self._uncertainties.items()
+        }
+        return VolumeSet(
+            sliced_img,
+            labels=sliced_labels,
+            uncertainties=sliced_uncertainties,
+        )
 
     def __repr__(self) -> str:
+        if self._uncertainties:
+            return (
+                f"VolumeSet(image={self._image!r}, labels={sorted(self._labels.keys())}, "
+                f"uncertainties={sorted(self._uncertainties.keys())})"
+            )
         return f"VolumeSet(image={self._image!r}, labels={sorted(self._labels.keys())})"
 
 

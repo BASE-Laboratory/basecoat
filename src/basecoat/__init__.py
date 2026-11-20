@@ -10,8 +10,16 @@ from .exceptions import (
     SpaceMismatchError,
     UnitConversionError,
 )
+from .filters import (
+    ArtifactCleanupReport,
+    compute_ring_anova_r2,
+    detect_ring_center_yx,
+    detrend_radial_cupping,
+    remove_rings_polar_conservative,
+)
 from .geometry import AffineTransform3D, SimilarityTransform3D, resample_volume
 from .io import (
+    open_ome_zarr,
     open_savu_h5,
     open_volume,
     read_ome_zarr,
@@ -42,6 +50,7 @@ __all__ = [
     "VolumeProtocol",
     "VolumeSet",
     "coarsen_axes",
+    "open_ome_zarr",
     "open_savu_h5",
     "open_volume",
     "read_ome_zarr",
@@ -51,7 +60,12 @@ __all__ = [
     "write_volume",
     "AffineTransform3D",
     "SimilarityTransform3D",
+    "ArtifactCleanupReport",
     "check_layer_imports",
+    "compute_ring_anova_r2",
+    "detect_ring_center_yx",
+    "detrend_radial_cupping",
     "fetch_file",
+    "remove_rings_polar_conservative",
     "resample_volume",
 ]

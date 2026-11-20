@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "basecoat"
-version = "0.2.0"
+version = "0.3.0"
 description = "Core volume container, region-lazy OME-Zarr/Savu/HDF5/TIFF/raw I/O, pullback 3D transforms, layer linter, and SHA-256 data fetching for the BASE Lab ecosystem."
 readme = "README.md"
 license = { file = "LICENSE" }
