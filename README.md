@@ -1,5 +1,6 @@
 # basecoat
 
+[![CI](https://github.com/BASE-Laboratory/basecoat/actions/workflows/ci.yml/badge.svg)](https://github.com/BASE-Laboratory/basecoat/actions/workflows/ci.yml)
 [![License: BSD-3-Clause](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg)](LICENSE)
 ![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)
 

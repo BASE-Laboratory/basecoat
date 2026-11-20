@@ -1,0 +1,106 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  release:
+    types:
+      - published
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-verify:
+    name: Build, Validate & Smoke-Test Distributions
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Install dev environment and run full checks
+        run: |
+          uv venv --python 3.12
+          uv pip install -e ".[dev]" build twine
+          uv run ruff check src tests
+          uv run ruff format --check src tests
+          uv run mypy src/basecoat
+          uv run pytest -v
+
+      - name: Verify git tag matches package __version__
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          TAG_VER="${GITHUB_REF_NAME#v}"
+          PKG_VER="$(uv run python -c 'import basecoat; print(basecoat.__version__)')"
+          if [ "$TAG_VER" != "$PKG_VER" ]; then
+            echo "::error::Git tag ($TAG_VER) does not match basecoat.__version__ ($PKG_VER)"
+            exit 1
+          fi
+
+      - name: Build wheel and sdist
+        run: |
+          uv run python -m build
+          uv run twine check dist/*
+          sha256sum dist/* > dist/SHA256SUMS.txt
+
+      - name: Smoke-test built wheel in clean isolated venv
+        run: |
+          uv venv /tmp/release-smoke --python 3.12
+          uv pip install --python /tmp/release-smoke/bin/python dist/*.whl
+          /tmp/release-smoke/bin/python -c "import numpy as np, basecoat as bc; v = bc.Volume.from_array(np.zeros((4,4,4), dtype=np.float32), voxel_size_um=1.0); assert v.spacing_in('m') == (1e-6, 1e-6, 1e-6)"
+
+      - name: Upload distribution artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/*
+
+  github-release:
+    name: Create GitHub Release
+    needs: build-and-verify
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download distribution artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+          generate_release_notes: true
+
+  publish-pypi:
+    name: Publish to PyPI (Trusted Publisher)
+    needs: build-and-verify
+    if: (startsWith(github.ref, 'refs/tags/v') || github.event_name == 'release') && vars.ENABLE_PYPI_PUBLISH == 'true'
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/basecoat
+    permissions:
+      id-token: write
+    steps:
+      - name: Download distribution artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
+
+      - name: Remove SHA256SUMS.txt before PyPI upload
+        run: rm -f dist/SHA256SUMS.txt
+
+      - name: Publish distribution to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          skip-existing: true
