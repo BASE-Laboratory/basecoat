@@ -65,7 +65,7 @@ Each repo owns one job. The "Must not contain" column lists what agents should m
 | **`OpenLSR-X`** | 2 Tool | Super-resolution models, training, inference, SR-specific losses and metrics | Zn-13X constants (`data/zn13x.py`, `zn13x_certified_regions.yaml`), generic readers, registration, `export_for_openimpala` | James | Strong beta, *npj* manuscript in prep |
 | **`X-FUSE`** | 2 Tool | Correlative fusion models, conformal uncertainty, fusion heads | Zn-13X & DIAD loaders, the $47.5^\circ$ offset, de-ringing/cupping code, generic readers, `export_for_openimpala` | James | `v1.0` candidate (licence to be settled before lifting any code) |
 | **`BraggTrack`** | 2 Tool | Bragg spot segmentation, multi-frame tracking, lineage, DFXM triggers, `ImageD11` / `NXprocess` export | Dataset constants, generic readers once `basecoat` facility readers land | James | `v0.5`, JOSS submission |
-| **`PorousDiff`** | 2 Tool | Conditional diffusion for microstructures | — | Asif (archive) | Parked |
+| **`PorousDiff`** | 2 Tool (+ Layer 4 `porousdiff_workflows`) | Conditional 3D diffusion & Lagrangian slab DDIM virtual compression (`porousdiff`); coupled `OpenImpala` + K11 DIAD XRD clamping optimisation lives in `porousdiff_workflows` | `openimpala` imports inside `porousdiff/`, raw uncalibrated TIFF solver hand-offs | James (`feature/paper-ready-conditional`); `main` preserved for Asif (MSc archive) | Active `v0.5` on `feature/paper-ready-conditional` (PR #1) |
 | **`MultimodalBenchmark`** | 4 Workflow | Zn-13X manifest & errata, fitted transforms, ruby metrology, splits, task specs, evaluator, tool adapters, derived release packaging, the benchmark paper | Model implementations; generic I/O & transforms once switched to `basecoat` | James | `v2` on `feat/benchmark-v2` (first `basecoat` consumer) |
 | **`XCT-Research`** | 4 Workflow | DIAD image-subtraction trigger and replay harness | Reusable tools (graduate to Layer 2 once proven and approved) | Mizanur | Scaffold |
 | **`DFXM-Topographic-Origins`** | 4 Workflow | Paper notebooks & FEA scripts for NMC811 single-crystal DFXM study | Reusable tracking code (lives in `BraggTrack`) | James | Published preprint archive |
@@ -177,7 +177,7 @@ The audit found the same job done in up to four places, with copies already disa
 3. **Solver boundary PRs (separate branches, one repo at a time):**
    - `OpenImpala` (`v5.1` feature branch, requires James's sign-off): accept `VolumeProtocol` with `OpenImpala`'s own unit-error exception (no `basecoat` runtime import).
    - `SMS` (`feat/modernize-tests-python` follow-up): accept contract OME-Zarr / `VolumeProtocol` at its Python boundary so `MultimodalBenchmark` can score stiffness alongside tortuosity.
-4. **Layer 2 tool cleanups (one repo per PR, existing test suites staying green):** Remove Zn-13X constants and `export_for_openimpala` from `OpenLSR-X` and (once its licence is settled) `X-FUSE`, migrating shared facility readers/filters/sidecars into `basecoat v0.2` as the second consumer arrives.
+4. **Layer 2 tool cleanups (one repo per PR, existing test suites staying green):** Switch `OpenLSR-X`, `X-FUSE`, `PorousDiff` (`feature/paper-ready-conditional`, preserving `main` for Asif), and `BraggTrack` (`fix/v0.5.1-events-bugs-and-joss`) onto `basecoat` (`v0.2`), deprecating bespoke `OpenImpala` deck/TIFF hand-offs in favour of calibrated `.ome.zarr` / `VolumeProtocol` and isolating coupled `PorousDiff` + `OpenImpala` clamping workflows into `porousdiff_workflows/`.
 
 ---
 
@@ -197,9 +197,9 @@ Transport and mechanics stay in separate solvers for now and couple through cont
 
 Agents do not implement against these until they are settled here.
 
-- [ ] **Licence of `X-FUSE`:** Currently `MIT` in-repo vs `BSD-3-Clause` across the rest of `BASE-Laboratory`. Settle before lifting any `X-FUSE` code into `basecoat`.
+- [x] **Licence of `X-FUSE` *(Settled 20 Nov 2026)*:** `X-FUSE` remains under `MIT` (preserving third-party MIT attributions); `X-FUSE` consumes `basecoat` (`BSD-3-Clause`), and zero code from `X-FUSE` is lifted into `basecoat`.
 - [ ] **Long-term maintenance of `basecoat`:** James initially; decide whether an RSE post is costed into the next major grant to own it.
 - [ ] **Maintainer of `SMS`:** Peter, James, or shared.
-- [ ] **`SMS` Python boundary conventions:** Confirm `SMS`'s native units for `dx` and field centering (`node` vs `face` vs `cell`) on `feat/modernize-tests-python`.
+- [x] **`SMS` Python boundary conventions *(Settled 20 Nov 2026)*:** Zero runtime `basecoat` dependency; accepts `VolumeProtocol` / `VolumeSet` and OME-Zarr v0.4 (`(z, y, x)` transposed zero-copy to Fortran `(x, y, z)`), converts `spacing_in("m")` to isotropic SI `dx` in metres (`UnitCalibrationError` if uncalibrated), and returns cell-centred `(nx, ny, nz)` fields in `SolveResult`.
 - [ ] **Horizon 3 elasticity path:** Whether elasticity enters `OpenImpala` on AMReX after the `SMS` vs AMReX vs FFT solver comparison.
 - [ ] **`TESA` exchange format:** Whether `TESA`'s fields sit on regular Cartesian grids that fit the OME-Zarr contract directly.
