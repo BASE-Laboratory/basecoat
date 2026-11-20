@@ -8,7 +8,7 @@ import h5py
 import numpy as np
 import pytest
 
-from basecoat import Volume, read_volume, write_volume
+from basecoat import Volume, __version__, read_volume, write_volume
 
 
 def test_hdf5_round_trip_and_multidataset_disambiguation(tmp_path: Path) -> None:
@@ -23,7 +23,7 @@ def test_hdf5_round_trip_and_multidataset_disambiguation(tmp_path: Path) -> None
     assert rt.space == "h5_space"
     assert np.allclose(rt.spacing_in("um"), (2.0, 1.0, 1.0))
     assert np.allclose(rt.data, arr)
-    assert rt.provenance["basecoat_version"] == "0.1.0"
+    assert rt.provenance["basecoat_version"] == __version__
 
     # Multi-dataset HDF5 requires explicit dataset_path
     multi_h5 = tmp_path / "multi.h5"

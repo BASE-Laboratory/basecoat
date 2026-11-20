@@ -744,6 +744,18 @@ class LazyVolume:
         return self._space
 
     @property
+    def centering(self) -> Centering:
+        return self._centering
+
+    @property
+    def label_names(self) -> dict[int, str] | None:
+        return dict(self._label_names) if self._label_names is not None else None
+
+    @property
+    def provenance(self) -> dict[str, Any]:
+        return dict(self._provenance)
+
+    @property
     def closed(self) -> bool:
         return self._closed
 

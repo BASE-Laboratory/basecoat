@@ -411,6 +411,34 @@ class SimilarityTransform3D:
             unit=self.unit,
         )
 
+    def then_similarity(self, next_transform: SimilarityTransform3D) -> SimilarityTransform3D:
+        """Chain ``self`` (``A -> B``) followed by ``next_transform`` (``B -> C``) as a 7-DOF ``SimilarityTransform3D``."""
+        if self.to_space != next_transform.from_space:
+            raise SpaceMismatchError(
+                f"Cannot chain transform '{self.from_space} -> {self.to_space}' into "
+                f"'{next_transform.from_space} -> {next_transform.to_space}': intermediate spaces differ."
+            )
+        if self.unit != next_transform.unit:
+            raise SpaceMismatchError(
+                f"Cannot chain transforms with different units ('{self.unit}' vs '{next_transform.unit}')."
+            )
+        r_tot = next_transform.rotation_zyx @ self.rotation_zyx
+        s_tot = float(next_transform.scale * self.scale)
+        c1 = np.asarray(self.center_zyx, dtype=np.float64)
+        t1 = np.asarray(self.translation_zyx, dtype=np.float64)
+        c2 = np.asarray(next_transform.center_zyx, dtype=np.float64)
+        t2 = np.asarray(next_transform.translation_zyx, dtype=np.float64)
+        t_out = next_transform.scale * (next_transform.rotation_zyx @ (c1 + t1 - c2)) + c2 + t2 - c1
+        return SimilarityTransform3D(
+            rotation_zyx=r_tot,
+            scale=s_tot,
+            center_zyx=self.center_zyx,
+            translation_zyx=(float(t_out[0]), float(t_out[1]), float(t_out[2])),
+            from_space=self.from_space,
+            to_space=next_transform.to_space,
+            unit=self.unit,
+        )
+
     def to_sitk(self) -> Any:
         """Convert to ``SimpleITK.Similarity3DTransform`` in ``(x, y, z)`` order."""
         sitk = _require_sitk()

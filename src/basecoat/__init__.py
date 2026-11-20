@@ -12,12 +12,15 @@ from .exceptions import (
 )
 from .geometry import AffineTransform3D, SimilarityTransform3D, resample_volume
 from .io import (
+    open_savu_h5,
     open_volume,
     read_ome_zarr,
+    read_savu_subvolume,
     read_volume,
     write_ome_zarr,
     write_volume,
 )
+from .layers import check_layer_imports
 from .volume import (
     AxisSpec,
     LazyVolume,
@@ -39,13 +42,16 @@ __all__ = [
     "VolumeProtocol",
     "VolumeSet",
     "coarsen_axes",
+    "open_savu_h5",
     "open_volume",
     "read_ome_zarr",
+    "read_savu_subvolume",
     "read_volume",
     "write_ome_zarr",
     "write_volume",
     "AffineTransform3D",
     "SimilarityTransform3D",
+    "check_layer_imports",
     "fetch_file",
     "resample_volume",
 ]

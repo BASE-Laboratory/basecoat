@@ -4,14 +4,15 @@ build-backend = "hatchling.build"
 
 [project]
 name = "basecoat"
-version = "0.1.0"
-description = "Core volume container, region-lazy OME-Zarr/HDF5/TIFF/raw I/O, pullback 3D transforms, and SHA-256 data fetching for the BASE Lab ecosystem."
+version = "0.2.0"
+description = "Core volume container, region-lazy OME-Zarr/Savu/HDF5/TIFF/raw I/O, pullback 3D transforms, layer linter, and SHA-256 data fetching for the BASE Lab ecosystem."
 readme = "README.md"
 license = { file = "LICENSE" }
 requires-python = ">=3.10"
 authors = [
   { name = "James Le Houx", email = "james.lehoux@gre.ac.uk" },
   { name = "Calum Green" },
+  { name = "Sharif Ahmed" },
   { name = "Peter Soar" },
 ]
 keywords = [
@@ -95,3 +96,8 @@ module = [
   "zarr.*",
 ]
 ignore_missing_imports = true
+
+[tool.basecoat.layers]
+layer = 1
+source_dirs = ["src"]
+banned_imports = ["torch", "mpi4py", "openimpala", "openlsrx", "x_fuse", "braggtrack", "multimodal_benchmark"]

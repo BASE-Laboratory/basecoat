@@ -7,7 +7,7 @@ from pathlib import Path
 
 import numpy as np
 
-from basecoat import Volume, VolumeSet, open_volume, read_ome_zarr, write_ome_zarr
+from basecoat import Volume, VolumeSet, __version__, open_volume, read_ome_zarr, write_ome_zarr
 
 
 def test_label_pyramid_uses_mode_never_mean_and_preserves_cell_centre_translation(
@@ -51,7 +51,7 @@ def test_label_pyramid_uses_mode_never_mean_and_preserves_cell_centre_translatio
 
     # Provenance stamped automatically
     prov = root_zattrs["basecoat_provenance"]
-    assert prov["basecoat_version"] == "0.1.0"
+    assert prov["basecoat_version"] == __version__
     assert "written_at_utc" in prov
 
     # Round-trip level 0 and level 1 as VolumeSet
