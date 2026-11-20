@@ -323,6 +323,7 @@ def write_ome_zarr(
     out.parent.mkdir(parents=True, exist_ok=True)
     img_vol = source.image if isinstance(source, VolumeSet) else source
     labels_dict = source.labels if isinstance(source, VolumeSet) else {}
+    unc_dict = source.uncertainties if isinstance(source, VolumeSet) else {}
 
     is_int_single_label = (not isinstance(source, VolumeSet)) and (img_vol.label_names is not None)
     stamped_prov = stamp_provenance(img_vol.provenance)
@@ -341,8 +342,9 @@ def write_ome_zarr(
         provenance=stamped_prov,
     )
 
+    actual_levels = len(root.attrs["multiscales"][0]["datasets"])
+
     if labels_dict:
-        actual_levels = len(root.attrs["multiscales"][0]["datasets"])
         labels_grp = root.create_group("labels")
         label_keys = sorted(labels_dict.keys())
         labels_grp.attrs["labels"] = label_keys
@@ -357,6 +359,23 @@ def write_ome_zarr(
                 chunks=None,
                 is_label=True,
                 provenance=stamp_provenance(lvol.provenance),
+            )
+
+    if unc_dict:
+        unc_grp = root.create_group("uncertainties")
+        unc_keys = sorted(unc_dict.keys())
+        unc_grp.attrs["uncertainties"] = unc_keys
+        for key in unc_keys:
+            uvol = unc_dict[key]
+            sub_grp = unc_grp.create_group(key)
+            _write_multiscale_group(
+                sub_grp,
+                uvol,
+                name=key,
+                multiscale_levels=actual_levels,
+                chunks=None,
+                is_label=False,
+                provenance=stamp_provenance(uvol.provenance),
             )
 
     return out
@@ -465,8 +484,12 @@ def open_ome_zarr(
     *,
     level: int = 0,
     label: str | None = None,
+    uncertainty: str | None = None,
 ) -> LazyVolume:
     """Open an OME-Zarr v0.4 array as a non-materialising :class:`LazyVolume`."""
+    if label is not None and uncertainty is not None:
+        raise ValueError("Pass at most one of label='...' or uncertainty='...', not both.")
+
     p = Path(path)
     if not p.exists():
         raise FileNotFoundError(f"OME-Zarr store does not exist: '{p}'.")
@@ -477,6 +500,13 @@ def open_ome_zarr(
             available = list(root["labels"].group_keys()) if "labels" in root else []
             raise KeyError(f"Label '{label}' not found in '{p}/labels' (available: {available}).")
         target_grp = root["labels"][label]
+    elif uncertainty is not None:
+        if "uncertainties" not in root or uncertainty not in root["uncertainties"]:
+            available = list(root["uncertainties"].group_keys()) if "uncertainties" in root else []
+            raise KeyError(
+                f"Uncertainty '{uncertainty}' not found in '{p}/uncertainties' (available: {available})."
+            )
+        target_grp = root["uncertainties"][uncertainty]
     else:
         target_grp = root
 
@@ -505,6 +535,7 @@ def read_ome_zarr(
     *,
     level: int = 0,
     label: str | None = None,
+    uncertainty: str | None = None,
     as_set: Literal[False] = False,
 ) -> Volume: ...
 
@@ -515,6 +546,7 @@ def read_ome_zarr(
     *,
     level: int = 0,
     label: None = None,
+    uncertainty: None = None,
     as_set: Literal[True],
 ) -> VolumeSet: ...
 
@@ -524,15 +556,18 @@ def read_ome_zarr(
     *,
     level: int = 0,
     label: str | None = None,
+    uncertainty: str | None = None,
     as_set: bool = False,
 ) -> Volume | VolumeSet:
     """Read an OME-Zarr v0.4 store into a :class:`Volume` or co-registered :class:`VolumeSet`."""
-    if as_set and label is not None:
-        raise ValueError("Pass either label='...' (single label Volume) or as_set=True, not both.")
+    if as_set and (label is not None or uncertainty is not None):
+        raise ValueError(
+            "Pass either label='...' / uncertainty='...' (single Volume) or as_set=True, not both."
+        )
 
     p = Path(path)
     if not as_set:
-        with open_ome_zarr(p, level=level, label=label) as lv:
+        with open_ome_zarr(p, level=level, label=label, uncertainty=uncertainty) as lv:
             return lv.to_volume(max_bytes=1024 * 1024**3)
 
     img_vol = read_ome_zarr(p, level=level, as_set=False)
@@ -549,4 +584,18 @@ def read_ome_zarr(
         for key in keys:
             if key in lbl_grp:
                 labels_out[key] = read_ome_zarr(p, level=level, label=key, as_set=False)
-    return VolumeSet(img_vol, labels=labels_out)
+
+    unc_out: dict[str, Volume] = {}
+    if "uncertainties" in root:
+        unc_grp = root["uncertainties"]
+        declared_unc = unc_grp.attrs.get("uncertainties")
+        u_keys = (
+            [str(k) for k in declared_unc]
+            if isinstance(declared_unc, list)
+            else sorted(unc_grp.group_keys())
+        )
+        for key in u_keys:
+            if key in unc_grp:
+                unc_out[key] = read_ome_zarr(p, level=level, uncertainty=key, as_set=False)
+
+    return VolumeSet(img_vol, labels=labels_out, uncertainties=unc_out)

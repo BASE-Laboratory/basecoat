@@ -2,7 +2,7 @@ cff-version: 1.2.0
 title: "basecoat: Core volume container, region-lazy I/O, and coordinate transforms for the BASE Lab ecosystem"
 message: "If you use basecoat in published work, please cite it using the metadata below."
 type: software
-version: 0.2.0
+version: 0.3.0
 date-released: "2026-11-20"
 license: BSD-3-Clause
 repository-code: "https://github.com/BASE-Laboratory/basecoat"

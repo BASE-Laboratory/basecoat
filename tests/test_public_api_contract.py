@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import basecoat
 
-EXPECTED_V0_2_0_ALL = [
+EXPECTED_V0_3_0_ALL = [
     "__version__",
     "BasecoatError",
     "ChecksumError",
@@ -16,6 +16,7 @@ EXPECTED_V0_2_0_ALL = [
     "VolumeProtocol",
     "VolumeSet",
     "coarsen_axes",
+    "open_ome_zarr",
     "open_savu_h5",
     "open_volume",
     "read_ome_zarr",
@@ -25,16 +26,21 @@ EXPECTED_V0_2_0_ALL = [
     "write_volume",
     "AffineTransform3D",
     "SimilarityTransform3D",
+    "ArtifactCleanupReport",
     "check_layer_imports",
+    "compute_ring_anova_r2",
+    "detect_ring_center_yx",
+    "detrend_radial_cupping",
     "fetch_file",
+    "remove_rings_polar_conservative",
     "resample_volume",
 ]
 
 
 def test_public_api_locked_to_version() -> None:
-    assert basecoat.__version__ == "0.2.0", (
-        "Update EXPECTED_V0_2_0_ALL intentionally when bumping basecoat.__version__."
+    assert basecoat.__version__ == "0.3.0", (
+        "Update EXPECTED_V0_3_0_ALL intentionally when bumping basecoat.__version__."
     )
-    assert list(basecoat.__all__) == EXPECTED_V0_2_0_ALL
+    assert list(basecoat.__all__) == EXPECTED_V0_3_0_ALL
     for sym in basecoat.__all__:
         assert hasattr(basecoat, sym), f"Exported symbol {sym!r} missing on basecoat module."
