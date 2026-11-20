@@ -1,0 +1,27 @@
+cff-version: 1.2.0
+title: "basecoat: Core volume container, region-lazy I/O, and coordinate transforms for the BASE Lab ecosystem"
+message: "If you use basecoat in published work, please cite it using the metadata below."
+type: software
+version: 0.1.0
+date-released: "2026-11-20"
+license: BSD-3-Clause
+repository-code: "https://github.com/BASE-Laboratory/basecoat"
+authors:
+  - family-names: "Le Houx"
+    given-names: "James"
+    orcid: "https://orcid.org/0000-0002-1576-0673"
+    affiliation: "BASE Laboratory, University of Greenwich & Rutherford Appleton Laboratory"
+  - family-names: "Green"
+    given-names: "Calum"
+    affiliation: "Imperial College London & Diamond Light Source"
+  - family-names: "Soar"
+    given-names: "Peter"
+    affiliation: "University of Greenwich"
+keywords:
+  - tomography
+  - porous-media
+  - ome-zarr
+  - x-ray-ct
+  - synchrotron
+  - image-registration
+  - scientific-python

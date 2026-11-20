@@ -1,0 +1,29 @@
+{
+  "title": "basecoat: Core volume container, region-lazy I/O, and coordinate transforms for the BASE Lab ecosystem",
+  "description": "Foundational volumetric container, OME-Zarr v0.4 / HDF5 / TIFF / raw region-lazy I/O, pullback 3D coordinate transforms, cell-centred resampling, and SHA-256 dataset fetching for the BASE Laboratory image-based modelling ecosystem.",
+  "license": "BSD-3-Clause",
+  "upload_type": "software",
+  "creators": [
+    {
+      "name": "Le Houx, James",
+      "orcid": "0000-0002-1576-0673",
+      "affiliation": "BASE Laboratory, University of Greenwich; ISIS Neutron and Muon Source, Rutherford Appleton Laboratory; The Faraday Institution"
+    },
+    {
+      "name": "Green, Calum",
+      "affiliation": "Imperial College London; Diamond Light Source"
+    },
+    {
+      "name": "Soar, Peter",
+      "affiliation": "University of Greenwich"
+    }
+  ],
+  "keywords": [
+    "X-ray computed tomography",
+    "OME-Zarr",
+    "porous media",
+    "synchrotron",
+    "image registration",
+    "BASE Laboratory"
+  ]
+}

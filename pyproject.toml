@@ -1,0 +1,97 @@
+[build-system]
+requires = ["hatchling>=1.21"]
+build-backend = "hatchling.build"
+
+[project]
+name = "basecoat"
+version = "0.1.0"
+description = "Core volume container, region-lazy OME-Zarr/HDF5/TIFF/raw I/O, pullback 3D transforms, and SHA-256 data fetching for the BASE Lab ecosystem."
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.10"
+authors = [
+  { name = "James Le Houx", email = "james.lehoux@gre.ac.uk" },
+  { name = "Calum Green" },
+  { name = "Peter Soar" },
+]
+keywords = [
+  "tomography",
+  "ome-zarr",
+  "porous-media",
+  "synchrotron",
+  "registration",
+  "scientific-imaging",
+]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: BSD License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Scientific/Engineering :: Image Processing",
+  "Topic :: Scientific/Engineering :: Physics",
+  "Typing :: Typed",
+]
+dependencies = [
+  "numpy>=1.26",
+  "scipy>=1.11",
+  "h5py>=3.10",
+  "tifffile>=2023.7",
+  "zarr>=2.16,<3",
+  "numcodecs>=0.12,<0.16",
+]
+
+[project.optional-dependencies]
+sitk = ["SimpleITK>=2.3"]
+vendor = ["rosettasciio>=0.4"]
+dev = [
+  "pytest>=8.0",
+  "pytest-cov>=5.0",
+  "ruff>=0.6",
+  "mypy>=1.10",
+  "SimpleITK>=2.3",
+  "ome-zarr>=0.8,<0.10",
+]
+
+[project.urls]
+Homepage = "https://github.com/BASE-Laboratory/basecoat"
+Repository = "https://github.com/BASE-Laboratory/basecoat"
+Issues = "https://github.com/BASE-Laboratory/basecoat/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/basecoat"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers"
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+mypy_path = "src"
+
+[[tool.mypy.overrides]]
+module = [
+  "h5py.*",
+  "numcodecs.*",
+  "scipy.*",
+  "SimpleITK.*",
+  "tifffile.*",
+  "zarr.*",
+]
+ignore_missing_imports = true
