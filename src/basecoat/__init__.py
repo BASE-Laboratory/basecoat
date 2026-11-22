@@ -62,6 +62,7 @@ def __getattr__(name: str) -> object:
         return getattr(_filters, name)
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
+
 __all__ = [
     "__version__",
     "BasecoatError",
