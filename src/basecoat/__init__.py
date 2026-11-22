@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from ._provenance import __version__
 from .data import fetch_file
 from .exceptions import (
@@ -9,13 +11,6 @@ from .exceptions import (
     ChecksumError,
     SpaceMismatchError,
     UnitConversionError,
-)
-from .filters import (
-    ArtifactCleanupReport,
-    compute_ring_anova_r2,
-    detect_ring_center_yx,
-    detrend_radial_cupping,
-    remove_rings_polar_conservative,
 )
 from .geometry import AffineTransform3D, SimilarityTransform3D, resample_volume
 from .io import (
@@ -28,7 +23,6 @@ from .io import (
     write_ome_zarr,
     write_volume,
 )
-from .layers import check_layer_imports
 from .volume import (
     AxisSpec,
     LazyVolume,
@@ -37,6 +31,37 @@ from .volume import (
     VolumeSet,
     coarsen_axes,
 )
+
+if TYPE_CHECKING:
+    from .filters import (
+        ArtifactCleanupReport,
+        compute_ring_anova_r2,
+        detect_ring_center_yx,
+        detrend_radial_cupping,
+        remove_rings_polar_conservative,
+    )
+    from .layers import check_layer_imports
+
+_LAZY_FILTERS = {
+    "ArtifactCleanupReport",
+    "compute_ring_anova_r2",
+    "detect_ring_center_yx",
+    "detrend_radial_cupping",
+    "remove_rings_polar_conservative",
+}
+
+
+def __getattr__(name: str) -> object:
+    if name == "check_layer_imports":
+        from .layers import check_layer_imports
+
+        return check_layer_imports
+    if name in _LAZY_FILTERS:
+        from . import filters as _filters
+
+        return getattr(_filters, name)
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
 
 __all__ = [
     "__version__",

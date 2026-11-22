@@ -100,4 +100,16 @@ ignore_missing_imports = true
 [tool.basecoat.layers]
 layer = 1
 source_dirs = ["src"]
-banned_imports = ["torch", "mpi4py", "openimpala", "openlsrx", "x_fuse", "braggtrack", "multimodal_benchmark"]
+banned_imports = [
+  "torch",
+  "mpi4py",
+  "openimpala",
+  "sms",
+  "openlsrx",
+  "x_fuse",
+  "braggtrack",
+  "porousdiff",
+  "porousdiff_workflows",
+  "multimodal_benchmark",
+  "xct_research",
+]
