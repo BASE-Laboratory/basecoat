@@ -38,7 +38,7 @@ EXPECTED_V0_3_0_ALL = [
 
 
 def test_public_api_locked_to_version() -> None:
-    assert basecoat.__version__ == "0.3.0", (
+    assert basecoat.__version__ == "0.3.1", (
         "Update EXPECTED_V0_3_0_ALL intentionally when bumping basecoat.__version__."
     )
     assert list(basecoat.__all__) == EXPECTED_V0_3_0_ALL

@@ -22,6 +22,8 @@ jobs:
 
       - name: Install uv
         uses: astral-sh/setup-uv@v4
+        with:
+          python-version: "3.12"
 
       - name: Install dev environment and run full checks
         run: |
